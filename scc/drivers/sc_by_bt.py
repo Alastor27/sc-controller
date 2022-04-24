@@ -92,12 +92,13 @@ class Driver:
 		self.daemon.get_scheduler().schedule(1.0, reconnect)
 	
 	
-	def _retry_cancel(self, syspath):
+	def _retry_cancel(self, syspath, vendor, product):
 		"""
 		Cancels reconnection scheduled by 'retry'. Called when device monitor
 		reports controller (as in BT device) being disconencted.
 		"""
-		self.reconnecting.remove(syspath)
+		if syspath in self.reconnecting:
+			self.reconnecting.remove(syspath)
 	
 	
 	def new_device_callback(self, syspath, *whatever):
@@ -243,7 +244,10 @@ class SCByBt(SCController):
 		""" Flushes all prepared control messages to the device """
 		while len(self._cmsg):
 			msg = self._cmsg.pop()
-			self._hidrawdev.sendFeatureReport(msg)
+			# Feature report data must be sent with report ID 3
+			# or Input/output error will occur with later BlueZ versions (5.64)
+			# Does not affect older BlueZ versions
+			self._hidrawdev.sendFeatureReport(msg, 3)
 	
 	
 	def input(self, idata):
