@@ -105,7 +105,9 @@ rm -R "${BUILD_APPDIR}/usr/share/icu"
 
 # Build important part
 python3 setup.py build
-python3 setup.py install --prefix ${BUILD_APPDIR}/usr
+
+# Need to use single-version-externally-managed due to setuptools behavior
+python3 setup.py install --single-version-externally-managed --prefix ${BUILD_APPDIR}/usr --record /dev/null
 
 # Move udev stuff
 mv ${BUILD_APPDIR}/usr/lib/udev/rules.d/69-${APP}.rules ${BUILD_APPDIR}/
@@ -127,12 +129,12 @@ mkdir -p ${BUILD_APPDIR}/usr/share/metainfo/
 cp scripts/${APP}.appdata.xml ${BUILD_APPDIR}/usr/share/metainfo/${APP}.appdata.xml
 
 # Make symlinks
-ln -sfr ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libcemuhook.cpython-39-x86_64-linux-gnu.so ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libcemuhook.so
-ln -sfr ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libhiddrv.cpython-39-x86_64-linux-gnu.so ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libhiddrv.so
-ln -sfr ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libremotepad.cpython-39-x86_64-linux-gnu.so ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libremotepad.so
-ln -sfr ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libsc_by_bt.cpython-39-x86_64-linux-gnu.so ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libsc_by_bt.so
-ln -sfr ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libuinput.cpython-39-x86_64-linux-gnu.so ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libuinput.so
-ln -sfr ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/posix1e.cpython-39-x86_64-linux-gnu.so ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/posix1e.so
+ln -sfr ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libcemuhook.cpython-310-x86_64-linux-gnu.so ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libcemuhook.so
+ln -sfr ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libhiddrv.cpython-310-x86_64-linux-gnu.so ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libhiddrv.so
+ln -sfr ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libremotepad.cpython-310-x86_64-linux-gnu.so ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libremotepad.so
+ln -sfr ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libsc_by_bt.cpython-310-x86_64-linux-gnu.so ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libsc_by_bt.so
+ln -sfr ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libuinput.cpython-310-x86_64-linux-gnu.so ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libuinput.so
+ln -sfr ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/posix1e.cpython-310-x86_64-linux-gnu.so ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/posix1e.so
 
 # Copy AppRun script
 cp scripts/appimage-AppRun.sh ${BUILD_APPDIR}/AppRun
