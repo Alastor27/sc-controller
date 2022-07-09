@@ -501,7 +501,7 @@ def get_evdev_devices_from_syspath(syspath):
 	rv = []
 	for name in os.listdir(syspath):
 		path = os.path.join(syspath, name)
-		if name.startswith("event"):
+		if name.startswith("event") and not name.endswith("count"):
 			eventnode = EvdevDriver.get_event_node(path)
 			if eventnode is not None:
 				try:
