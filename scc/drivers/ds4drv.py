@@ -193,8 +193,8 @@ class DS4EvdevController(EvdevController):
 		1:  { "axis": "stick_y", "deadzone": 4, "max": 0, "min": 255 },
 		3:  { "axis": "rpad_x", "deadzone": 4, "max": 255, "min": 0 },
 		4:  { "axis": "rpad_y", "deadzone": 8, "max": 0, "min": 255 },
-		2:  { "axis": "ltrig", "max": 255, "min": 0 },
-		5:  { "axis": "rtrig", "max": 255, "min": 0 },
+		2:  { "axis": "ltrig", "max": 32767, "min": -32767 },
+		5:  { "axis": "rtrig", "max": 32767, "min": -32767 },
 		16: { "axis": "lpad_x", "deadzone": 0, "max": 1, "min": -1 },
 		17: { "axis": "lpad_y", "deadzone": 0, "max": -1, "min": 1 }
 	}
