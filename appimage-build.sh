@@ -5,8 +5,13 @@ LIB="lib"
 
 EVDEV_VERSION=0.7.0
 [ x"$BUILD_APPDIR" == "x" ] && BUILD_APPDIR=$(pwd)/appimage
-PYTHON_VERSION=$(python -c 'import sys; version=sys.version_info[:3]; print("{0}.{1}".format(*version))')
+PYTHON_VERSION=$(python3 -c 'import sys; version=sys.version_info[:3]; print("{0}.{1}".format(*version))')
+SITE_PACKAGES_PATH=$(python3 -c "import os,sys; print([p for p in sys.path if p.endswith('site-packages') and sys.prefix in p][0])")
 
+if [ -z ${SITE_PACKAGES_PATH} ]; then
+  echo "Could not determine global site-packages path. Exiting";
+  exit 1;
+fi
 
 function download_dep() {
 	NAME=$1
@@ -48,7 +53,7 @@ set -ex		# display commands, terminate after 1st failure
 
 # Download deps
 download_dep "python-evdev-0.7.0" "https://github.com/gvalkov/python-evdev/archive/v0.7.0.tar.gz"
-download_dep "pylibacl-0.5.3" "https://github.com/iustin/pylibacl/releases/download/pylibacl-v0.5.3/pylibacl-0.5.3.tar.gz"
+download_dep "pylibacl-0.6.0" "https://github.com/iustin/pylibacl/releases/download/v0.6.0/pylibacl-0.6.0.tar.gz"
 download_dep "python-gobject-3.36.1" "https://archive.archlinux.org/packages/p/python-gobject/python-gobject-3.36.1-1-x86_64.pkg.tar.zst"
 download_dep "python-vdf-3.4" "https://github.com/ValvePython/vdf/archive/v3.4.tar.gz"
 download_dep "libpng-1.6.34" "https://archive.archlinux.org/packages/l/libpng/libpng-1.6.34-2-x86_64.pkg.tar.xz"
@@ -57,8 +62,8 @@ download_dep "libcroco-0.6.13" "https://archive.archlinux.org/packages/l/libcroc
 download_dep "libxml2-2.9.10" "https://archive.archlinux.org/packages/l/libxml2/libxml2-2.9.10-2-x86_64.pkg.tar.zst"
 download_dep "librsvg-2.48.7" "https://archive.archlinux.org/packages/l/librsvg/librsvg-2%3A2.48.7-1-x86_64.pkg.tar.zst"
 download_dep "icu-67.1" "https://archive.archlinux.org/packages/i/icu/icu-67.1-1-x86_64.pkg.tar.zst"
-download_dep "zlib-1:1.2.11" "https://archive.archlinux.org/packages/z/zlib/zlib-1%3A1.2.11-1-x86_64.pkg.tar.xz"
-download_dep "libffi-3.3" "https://archive.archlinux.org/packages/l/libffi/libffi-3.3-3-x86_64.pkg.tar.zst"
+download_dep "zlib-1:1.2.12" "https://archive.archlinux.org/packages/z/zlib/zlib-1%3A1.2.12-2-x86_64.pkg.tar.zst"
+download_dep "libffi-3.4.3" "https://archive.archlinux.org/packages/l/libffi/libffi-3.4.3-1-x86_64.pkg.tar.zst"
 
 # Prepare & build deps
 export PYTHONPATH=${BUILD_APPDIR}/usr/lib/python${PYTHON_VERSION}/site-packages/
@@ -71,17 +76,17 @@ if [[ $(grep ID_LIKE /etc/os-release) == *"suse"* ]] ; then
 fi
 
 build_dep "python-evdev-0.7.0"
-build_dep "pylibacl-0.5.3"
+build_dep "pylibacl-0.6.0"
 build_dep "python-vdf-3.4"
-unpack_dep "libpng-1.6.34"
 unpack_dep "python-gobject-3.36.1"
+unpack_dep "libpng-1.6.34"
 unpack_dep "gdk-pixbuf-2.36.9"
 unpack_dep "libcroco-0.6.13"
 unpack_dep "libxml2-2.9.10"
 unpack_dep "librsvg-2.48.7"
 unpack_dep "icu-67.1"
-unpack_dep "zlib-1:1.2.11"
-unpack_dep "libffi-3.3"
+unpack_dep "zlib-1:1.2.12"
+unpack_dep "libffi-3.4.3"
 
 # Remove uneeded files
 rm -f "${BUILD_APPDIR}/usr/${LIB}/gdk-pixbuf-2.0/2.10.0/loaders/libpixbufloader-ani.so"
@@ -113,8 +118,8 @@ python3 setup.py install --single-version-externally-managed --prefix ${BUILD_AP
 mv ${BUILD_APPDIR}/usr/lib/udev/rules.d/69-${APP}.rules ${BUILD_APPDIR}/
 rmdir ${BUILD_APPDIR}/usr/lib/udev/rules.d/
 rmdir ${BUILD_APPDIR}/usr/lib/udev/
-mkdir -p ${BUILD_APPDIR}/usr/${LIB}/python3.8/site-packages/scc/
-cp "/usr/include/linux/input-event-codes.h" ${BUILD_APPDIR}/usr/${LIB}/python3.8/site-packages/scc/
+mkdir -p ${BUILD_APPDIR}/usr/${LIB}/python${PYTHON_VERSION}/site-packages/scc/
+cp "/usr/include/linux/input-event-codes.h" ${BUILD_APPDIR}/usr/${LIB}/python${PYTHON_VERSION}/site-packages/scc/
 
 # Move & patch desktop file
 mv ${BUILD_APPDIR}/usr/share/applications/${APP}.desktop ${BUILD_APPDIR}/
@@ -129,12 +134,12 @@ mkdir -p ${BUILD_APPDIR}/usr/share/metainfo/
 cp scripts/${APP}.appdata.xml ${BUILD_APPDIR}/usr/share/metainfo/${APP}.appdata.xml
 
 # Make symlinks
-ln -sfr ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libcemuhook.cpython-310-x86_64-linux-gnu.so ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libcemuhook.so
-ln -sfr ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libhiddrv.cpython-310-x86_64-linux-gnu.so ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libhiddrv.so
-ln -sfr ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libremotepad.cpython-310-x86_64-linux-gnu.so ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libremotepad.so
-ln -sfr ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libsc_by_bt.cpython-310-x86_64-linux-gnu.so ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libsc_by_bt.so
-ln -sfr ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libuinput.cpython-310-x86_64-linux-gnu.so ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/libuinput.so
-ln -sfr ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/posix1e.cpython-310-x86_64-linux-gnu.so ${BUILD_APPDIR}/usr/lib64/python${PYTHON_VERSION}/site-packages/posix1e.so
+ln -sfr ${BUILD_APPDIR}${SITE_PACKAGES_PATH}/libcemuhook.cpython-310-x86_64-linux-gnu.so ${BUILD_APPDIR}${SITE_PACKAGES_PATH}/libcemuhook.so
+ln -sfr ${BUILD_APPDIR}${SITE_PACKAGES_PATH}/libhiddrv.cpython-310-x86_64-linux-gnu.so ${BUILD_APPDIR}${SITE_PACKAGES_PATH}//libhiddrv.so
+ln -sfr ${BUILD_APPDIR}${SITE_PACKAGES_PATH}/libremotepad.cpython-310-x86_64-linux-gnu.so ${BUILD_APPDIR}${SITE_PACKAGES_PATH}/libremotepad.so
+ln -sfr ${BUILD_APPDIR}${SITE_PACKAGES_PATH}/libsc_by_bt.cpython-310-x86_64-linux-gnu.so ${BUILD_APPDIR}${SITE_PACKAGES_PATH}/libsc_by_bt.so
+ln -sfr ${BUILD_APPDIR}${SITE_PACKAGES_PATH}/libuinput.cpython-310-x86_64-linux-gnu.so ${BUILD_APPDIR}${SITE_PACKAGES_PATH}/libuinput.so
+ln -sfr ${BUILD_APPDIR}${SITE_PACKAGES_PATH}/posix1e.cpython-310-x86_64-linux-gnu.so ${BUILD_APPDIR}${SITE_PACKAGES_PATH}/posix1e.so
 
 # Copy AppRun script
 cp scripts/appimage-AppRun.sh ${BUILD_APPDIR}/AppRun
