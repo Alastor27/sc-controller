@@ -21,9 +21,9 @@ from scc.constants import LEFT, RIGHT, CPAD, STICK, PITCH, YAW, ROLL
 from scc.constants import PARSER_CONSTANTS, ControllerFlags
 from scc.constants import FE_STICK, FE_TRIGGER, FE_PAD
 from scc.constants import TRIGGER_CLICK, TRIGGER_MAX
-from scc.constants import SCButtons
+from scc.constants import SCButtons, BASE_STICK_MOUSE_SPEED
 from scc.aliases import ALL_BUTTONS as GAMEPAD_BUTTONS
-from math import sqrt, sin, cos, atan2, pi as PI
+from math import copysign, sqrt, sin, cos, atan2, pi as PI
 
 import sys, time, logging, inspect
 log = logging.getLogger("Actions")
@@ -626,7 +626,7 @@ class AxisAction(Action):
 		are localized and Negative/Positive may be switched over depending on
 		axis.
 		"""
-		if id in Axes or id in Rels:
+		if id in Axes.__members__.values() or id in Rels.__members__.values():
 			axis, neg, pos = "%s %s" % (id.name, _("Axis")), _("Negative"), _("Positive")
 			if id in AxisAction.AXIS_NAMES:
 				axis, neg, pos = [ _(x) for x in AxisAction.AXIS_NAMES[id] ]
@@ -914,11 +914,17 @@ class MouseAction(WholeHapticAction, Action):
 	
 	
 	def whole(self, mapper, x, y, what):
-		if what == STICK:
-			mapper.mouse_move(x * self.speed[0] * 0.01, y * self.speed[1] * 0.01)
-			mapper.force_event.add(FE_STICK)
-		elif what == RIGHT and mapper.controller_flags() & ControllerFlags.HAS_RSTICK:
-			mapper.mouse_move(x * self.speed[0] * 0.01, y * self.speed[1] * 0.01)
+		#if what == STICK:
+		#	mapper.mouse_move(x * self.speed[0] * 0.01, y * self.speed[1] * 0.01)
+		#	mapper.force_event.add(FE_STICK)
+		if ((what == STICK) or
+			(what == RIGHT and mapper.controller_flags() & ControllerFlags.HAS_RSTICK)):
+			ratio_x = x / (STICK_PAD_MAX if x > 0 else STICK_PAD_MIN) * copysign(1, x)
+			ratio_y = y / (STICK_PAD_MAX if y > 0 else STICK_PAD_MIN) * copysign(1, y)
+			mouse_dx = ratio_x * (mapper.time_elapsed * BASE_STICK_MOUSE_SPEED) * self.speed[0]
+			mouse_dy = ratio_y * (mapper.time_elapsed * BASE_STICK_MOUSE_SPEED) * self.speed[1]
+			#mapper.mouse_move_stick(x * self.speed[0] * 0.01, y * self.speed[1] * 0.01)
+			mapper.mouse_move_stick(mouse_dx, mouse_dy)
 			mapper.force_event.add(FE_PAD)
 		else:	# left or right pad
 			if mapper.is_touched(what):
@@ -1219,7 +1225,7 @@ class GyroAction(Action):
 		if self.name : return self.name
 		rv = []
 		
-		if self.axes[0] in Rels:
+		if self.axes[0] in Rels.__members__.values():
 			return _("Mouse")
 		
 		for x in self.axes:
@@ -1285,7 +1291,7 @@ class GyroAbsAction(HapticEnabledAction, GyroAction):
 				pyr[i] = int(clamp(STICK_PAD_MIN, pyr[i], STICK_PAD_MAX))
 		for i in self.GYROAXES:
 			axis = self.axes[i]
-			if axis in Axes or type(axis) == int:
+			if axis in Axes.__members__.values() or type(axis) == int:
 				val = AxisAction.clamp_axis(axis, pyr[i] * self.speed[i])
 				if self._deadzone_fn:
 					val, trash = self._deadzone_fn(val, 0, STICK_PAD_MAX)
@@ -1519,12 +1525,12 @@ class ButtonAction(HapticEnabledAction, Action):
 		elif context == Action.AC_OSK:
 			if button in ButtonAction.MODIFIERS_NAMES:
 				return _(ButtonAction.MODIFIERS_NAMES[button])
-			elif button in Keys:
+			elif button in Keys.__members__.values():
 				return button.name.split("_", 1)[-1].title()
 			return ""
 		elif button is None: # or isinstance(button, NoAction):
 			return "None"
-		elif button in Keys:
+		elif button in Keys.__members__.values():
 			return button.name.split("_", 1)[-1]
 		else:
 			return _("Button %i") % (button,)

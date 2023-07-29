@@ -192,7 +192,7 @@ class Deck(USBDevice, SCController):
 			self.daemon.add_controller(self)
 			self.configure()
 			self._ready = True
-		
+
 		self._old_state, self._input = self._input, self._old_state
 		ctypes.memmove(ctypes.addressof(self._input), data, len(data))
 		if self._input.seq % UNLIZARD_INTERVAL == 0:
@@ -222,6 +222,9 @@ class Deck(USBDevice, SCController):
 		self._input.rstick_x = apply_deadzone(self._input.rstick_x, STICK_DEADZONE)
 		self._input.rstick_y = apply_deadzone(self._input.rstick_y, STICK_DEADZONE)
 		
+		# Invert Gyro Roll to match Steam Controller coordinate system
+		self._input.groll = -self._input.groll
+
 		m = self.get_mapper()
 		if m:
 			self.mapper.input(self, self._old_state, self._input)
