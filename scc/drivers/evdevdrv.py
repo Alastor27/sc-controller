@@ -388,7 +388,7 @@ class EvdevDriver(object):
 
 		try:
 			dev = evdev.InputDevice(eventnode)
-			assert dev.fn == eventnode
+			assert dev.path == eventnode
 			config_fn = "evdev-%s.json" % (dev.name.strip().replace("/", ""),)
 			config_file = os.path.join(get_config_path(), "devices", config_fn)
 		except OSError as ose:
@@ -506,7 +506,7 @@ def get_evdev_devices_from_syspath(syspath):
 			if eventnode is not None:
 				try:
 					dev = evdev.InputDevice(eventnode)
-					assert dev.fn == eventnode
+					assert dev.path == eventnode
 					rv.append(dev)
 				except Exception as e:
 					log.exception(e)
