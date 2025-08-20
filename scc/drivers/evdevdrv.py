@@ -457,7 +457,7 @@ class EvdevDriver(object):
 			print("Failed to open device:", str(e), file=sys.stderr)
 			return None
 		if controller:
-			self._devices[evdevdevice.fn] = controller
+			self._devices[evdevdevice.path] = controller
 			self.daemon.add_controller(controller)
 			log.debug("Evdev device added: %s", controller.get_device_name())
 		return controller
